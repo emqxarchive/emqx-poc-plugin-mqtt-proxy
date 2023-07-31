@@ -1,0 +1,14 @@
+{application, plugin_mqtt_proxy,
+ [{description, "Another amazing EMQX plugin."},
+  {vsn, "0.1.0"},
+  {modules, []},
+  {registered, [plugin_mqtt_proxy_sup, plugin_mqtt_proxy_worker_sup]},
+  {applications, [kernel, stdlib, emqtt]},
+  {mod, {plugin_mqtt_proxy_app, []}},
+  {env, [ {private_keys_dir, "/tmp/privkeys/"}
+        , {remote_host, "127.0.0.1"}
+        , {remote_port, 48883}
+        ]},
+  {licenses, ["Apache-2.0"]},
+  {maintainers, ["EMQX Team <emqx-support@emqx.io>"]}
+ ]}.
