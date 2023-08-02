@@ -136,6 +136,9 @@ on_client_connect(ConnInfo = #{socktype := ssl}, Props, Env) ->
             %% unlink(Pid),
             case emqtt:connect(Pid) of
                 {ok, _} ->
+                    %% emqx_connection doesn't trap exits by default
+                    %% without this, the stepdown request might throw errors.
+                    process_flag(trap_exit, true),
                     {ok, Props};
                 Error ->
                     ?SLOG(warning, #{
@@ -177,7 +180,7 @@ on_client_disconnected(ClientInfo = #{clientid := ClientId}, ReasonCode, ConnInf
         "Client(~s) disconnected due to ~p, ClientInfo:~n~p~n, ConnInfo:~n~p~n",
         [ClientId, ReasonCode, ClientInfo, ConnInfo]
     ),
-    ?WITH_PROXY_PID(Pid, ok = emqtt:stop(Pid)),
+    ?WITH_PROXY_PID(Pid, catch emqtt:stop(Pid)),
     ok.
 
 %% unused
