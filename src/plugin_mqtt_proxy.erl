@@ -93,6 +93,7 @@ on_client_connect(ConnInfo = #{socktype := ssl}, Props, Env) ->
     }),
     #{
         clientid := ClientId,
+        clean_start := CleanStart,
         peercert := DERCertificate,
         %% , expiry_interval := ExpiryInterval
         keepalive := KeepAlive,
@@ -113,6 +114,7 @@ on_client_connect(ConnInfo = #{socktype := ssl}, Props, Env) ->
         {host, Host},
         {port, Port},
         {clientid, ClientId},
+        {clean_start, CleanStart},
         {owner, self()},
         {proto_ver, ProtoVer},
         {keepalive, KeepAlive},
@@ -127,12 +129,23 @@ on_client_connect(ConnInfo = #{socktype := ssl}, Props, Env) ->
             disconnected => {plugin_mqtt_proxy_worker, on_disconnected, [ConnPid]}
         }}
     ],
-    case plugin_mqtt_proxy_worker_sup:start_child(ConnOpts) of
+    case emqtt:start_link(ConnOpts) of
         {ok, Pid} ->
             put(?PROXY_PID_KEY, Pid),
             %% the exit signal can disrupt the takeover process
-            unlink(Pid),
-            {ok, Props};
+            %% unlink(Pid),
+            case emqtt:connect(Pid) of
+                {ok, _} ->
+                    {ok, Props};
+                Error ->
+                    ?SLOG(warning, #{
+                        msg => "failed_to_connect_to_remote_broker",
+                        clientid => ClientId,
+                        error => Error
+                    }),
+                    catch emqtt:stop(Pid),
+                    {stop, {error, ?RC_UNSPECIFIED_ERROR}}
+            end;
         Error ->
             ?SLOG(warning, #{
                 msg => "failed_to_connect_to_remote_broker",
@@ -164,7 +177,7 @@ on_client_disconnected(ClientInfo = #{clientid := ClientId}, ReasonCode, ConnInf
         "Client(~s) disconnected due to ~p, ClientInfo:~n~p~n, ConnInfo:~n~p~n",
         [ClientId, ReasonCode, ClientInfo, ConnInfo]
     ),
-    ?WITH_PROXY_PID(Pid, ok = plugin_mqtt_proxy_worker_sup:ensure_child_deleted(Pid)),
+    ?WITH_PROXY_PID(Pid, ok = emqtt:stop(Pid)),
     ok.
 
 %% unused

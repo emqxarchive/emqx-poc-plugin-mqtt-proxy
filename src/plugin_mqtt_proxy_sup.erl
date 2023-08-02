@@ -16,12 +16,12 @@ init([]) ->
         period => 100
     },
     ChildSpecs = [
-        #{
-            id => plugin_mqtt_proxy_worker_sup,
-            start => {plugin_mqtt_proxy_worker_sup, start_link, []},
-            type => supervisor,
-            restart => permanent,
-            shutdown => infinity
-        }
+        %% #{
+        %%     id => plugin_mqtt_proxy_worker_sup,
+        %%     start => {plugin_mqtt_proxy_worker_sup, start_link, []},
+        %%     type => supervisor,
+        %%     restart => permanent,
+        %%     shutdown => infinity
+        %% }
     ],
     {ok, {SupFlags, ChildSpecs}}.

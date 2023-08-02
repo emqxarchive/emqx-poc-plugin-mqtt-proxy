@@ -6,14 +6,6 @@
 -export([start_link/1, on_publish/2, on_disconnected/2]).
 
 start_link(ConnOpts) ->
-    %% Opts = [ {host, Host}
-    %%        , {port, Port}
-    %%        , {clientid, ClientId}
-    %%        , {ssl, true}
-    %%        , {ssl_opts, [ {cacerts, [DERCertificate]}
-    %%                     , {keyfile, Keyfile}
-    %%                     ]}
-    %%        ],
     ?SLOG(warning, #{
         msg => "starting_proxy",
         conn_opts => ConnOpts
