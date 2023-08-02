@@ -6,7 +6,7 @@
 -export([start_link/1, on_publish/2, on_disconnected/2]).
 
 start_link(ConnOpts) ->
-    ?SLOG(warning, #{
+    ?SLOG(debug, #{
         msg => "starting_proxy",
         conn_opts => ConnOpts
     }),
@@ -24,7 +24,7 @@ start_link(ConnOpts) ->
     end.
 
 on_publish(Message, ConnPid) ->
-    ?SLOG(warning, #{
+    ?SLOG(debug, #{
         msg => "on_publish",
         pub_message => Message,
         conn_pid => ConnPid
@@ -35,7 +35,7 @@ on_publish(Message, ConnPid) ->
         qos := QoS,
         retain := Retain,
         payload := Payload,
-        properties := Props
+        properties := _Props
     } = Message,
     %% DeliveryMessage = emqx_message:from_map(Message),
     %% FIXME: headers?
@@ -44,7 +44,7 @@ on_publish(Message, ConnPid) ->
             #{dup => Dup, retain => Retain},
             emqx_message:make(proxy, QoS, Topic, Payload)
         ),
-    ?SLOG(warning, #{
+    ?SLOG(debug, #{
         msg => "on_publish",
         delivery_message => DeliveryMessage,
         conn_pid => ConnPid
@@ -54,7 +54,7 @@ on_publish(Message, ConnPid) ->
 
 on_disconnected({ReasonCode, Properties}, ConnPid) when is_map(Properties) ->
     ReasonName = disconnect_reason(ReasonCode),
-    ?SLOG(warning, #{
+    ?SLOG(debug, #{
         msg => "on_disconnected",
         reason => {ReasonCode, ReasonName, Properties},
         conn_pid => ConnPid
@@ -65,9 +65,10 @@ on_disconnected(Reason, ConnPid) ->
     Properties = #{},
     ReasonCode = ?RC_UNSPECIFIED_ERROR,
     ReasonName = disconnect_reason(ReasonCode),
-    ?SLOG(warning, #{
+    ?SLOG(debug, #{
         msg => "on_disconnected",
-        reason => {ReasonCode, ReasonName, Properties},
+        reason => Reason,
+        returned_reason => {ReasonCode, ReasonName, Properties},
         conn_pid => ConnPid
     }),
     ConnPid ! {disconnect, ReasonCode, ReasonName, Properties},

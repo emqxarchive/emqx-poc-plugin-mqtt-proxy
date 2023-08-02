@@ -1,5 +1,5 @@
 {application, plugin_mqtt_proxy,
- [{description, "Another amazing EMQX plugin."},
+ [{description, "Proxies all SSL connections to another broker"},
   {vsn, "0.1.0"},
   {modules, []},
   {registered, [plugin_mqtt_proxy_sup, plugin_mqtt_proxy_worker_sup]},

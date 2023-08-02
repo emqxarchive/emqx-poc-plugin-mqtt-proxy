@@ -84,8 +84,8 @@ on_client_connect(_ConnInfo = #{peercert := undefined, socktype := ssl}, _Props,
     }),
     {stop, {error, ?RC_BAD_USER_NAME_OR_PASSWORD}};
 on_client_connect(ConnInfo = #{socktype := ssl}, Props, Env) ->
-    ?SLOG(warning, #{
-        msg => "demo_log_msg_on_client_connect",
+    ?SLOG(debug, #{
+        msg => "proxy_plugin_on_connect",
         me => self(),
         env => Env,
         conninfo => ConnInfo,
@@ -202,7 +202,7 @@ on_client_authorize(ClientInfo = #{clientid := ClientId}, PubSub, Topic, Result,
 on_client_subscribe(#{clientid := ClientId}, _Properties, TopicFilters, _Env) ->
     ?WITH_PROXY_PID(Pid, begin
         ?SLOG(
-            warning,
+            debug,
             #{
                 msg => "proxy_will_subscribe",
                 clientid => ClientId,
@@ -219,7 +219,7 @@ on_client_subscribe(#{clientid := ClientId}, _Properties, TopicFilters, _Env) ->
 on_client_unsubscribe(#{clientid := ClientId}, _Properties, TopicFilters, _Env) ->
     ?WITH_PROXY_PID(Pid, begin
         ?SLOG(
-            warning,
+            debug,
             #{
                 msg => "proxy_will_unsubscribe",
                 clientid => ClientId,
@@ -252,7 +252,7 @@ on_session_unsubscribed(#{clientid := ClientId}, Topic, Opts, _Env) ->
 on_session_resumed(#{clientid := ClientId}, SessInfo, _Env) ->
     ?WITH_PROXY_PID(Pid, begin
         ?SLOG(
-            warning,
+            debug,
             #{
                 msg => "proxy_resuming_session",
                 clientid => ClientId,
@@ -295,7 +295,7 @@ on_message_publish(Message = #message{topic = <<"$SYS/", _/binary>>}, _Env) ->
 on_message_publish(Message, _Env) ->
     ?WITH_PROXY_PID(Pid, begin
         ?SLOG(
-            warning,
+            debug,
             #{
                 msg => "proxy_forwarding_msg",
                 message => Message
