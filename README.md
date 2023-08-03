@@ -7,6 +7,22 @@
 3. The private keys filenames have the form `${clientid}.pem`, when `${clientid}` exactly matches the MQTT Client ID of the connecting client.
 4. If a matching private key for a connecting client is not found, the client is denied connection.
 5. Peer certificate is only available when `verify = verify_peer` in the listener.  Therefore, if `verify = verify_none` and the peer certificate info is missing, we abort the connection.
+6. We don't rely on "local" (EMQX) persistent sessions, only on the remote broker's persistent sessions capabilities.
+7. If either client <-> EMQX or EMQX <-> remote broker connections is stopped, the other is also stopped.
+
+## Configuration
+
+In order to configure this plugin, the following configuration options must be set:
+
+- `private_keys_dir`: the directory on EMQX's file system that contains **all** client private keys to be used.  They must all be in PEM format, and the filename must match that client's `clientid`.
+- `remote_host`: the hostname or IP of the remote broker to connect to.
+- `remote_port`: the port of the remote broker's TLS listener.
+
+Those options must be set on all EMQX nodes.  In order to do so, the following command may be executed on one of EMQX's nodes:
+
+```sh
+emqx eval 'erpc:multicall(emqx:running_nodes(), fun() -> ok = persistent_term:put({?MODULE, private_keys_dir}, "/path/to/private/keys"), ok = persistent_term:put({?MODULE, remote_host}, "remote.broker.host"), ok = persistent_term:put({?MODULE, remote_port}, 8883) end).'
+```
 
 ## Release
 
