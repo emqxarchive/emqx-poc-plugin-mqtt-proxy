@@ -21,8 +21,10 @@ In order to configure this plugin, the following configuration options must be s
 Those options must be set on all EMQX nodes.  In order to do so, the following command may be executed on one of EMQX's nodes:
 
 ```sh
-emqx eval 'erpc:multicall(emqx:running_nodes(), fun() -> ok = persistent_term:put({?MODULE, private_keys_dir}, "/path/to/private/keys"), ok = persistent_term:put({?MODULE, remote_host}, "remote.broker.host"), ok = persistent_term:put({?MODULE, remote_port}, 8883) end).'
+emqx eval 'erpc:multicall(emqx:running_nodes(), fun() -> ok = persistent_term:put({plugin_mqtt_proxy, private_keys_dir}, "/path/to/private/keys"), ok = persistent_term:put({plugin_mqtt_proxy, remote_host}, "remote.broker.host"), ok = persistent_term:put({plugin_mqtt_proxy, remote_port}, 8883) end).'
 ```
+
+Note: this command must be run **after** the plugin is installed.
 
 ## Release
 
