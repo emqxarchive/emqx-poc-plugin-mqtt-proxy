@@ -5,7 +5,7 @@
 1. The private keys are all located in the file system where EMQX is running.
 2. The OS user running EMQX has read permissions for all keys.
 3. The private keys filenames have the form `${clientid}.pem`, when `${clientid}` exactly matches the MQTT Client ID of the connecting client.
-4. If a matching private key for a connecting client is not found, the client is denied connection.
+4. If a matching private key for a connecting client is not found, the client is allowed connection and no proxied connection to the remote broker is made.
 5. Peer certificate is only available when `verify = verify_peer` in the listener.  Therefore, if `verify = verify_none` and the peer certificate info is missing, we abort the connection.
 6. We don't rely on "local" (EMQX) persistent sessions, only on the remote broker's persistent sessions capabilities.
 7. If either client <-> EMQX or EMQX <-> remote broker connections is stopped, the other is also stopped.

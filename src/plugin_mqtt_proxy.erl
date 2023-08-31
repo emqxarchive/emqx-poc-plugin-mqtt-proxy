@@ -91,6 +91,19 @@ on_client_connect(ConnInfo = #{socktype := ssl}, Props, Env) ->
         conninfo => ConnInfo,
         props => Props
     }),
+    #{clientid := ClientId} = ConnInfo,
+    PrivateKeysDir = persistent_term:get({?MODULE, private_keys_dir}),
+    Keyfile = filename:join([to_bin(PrivateKeysDir), [ClientId, <<".pem">>]]),
+    case filelib:is_regular(Keyfile) of
+        true ->
+            start_and_store_proxy(ConnInfo, Props, Keyfile);
+        false ->
+            {ok, Props}
+    end;
+on_client_connect(_ConnInfo, Props, _Env) ->
+    {ok, Props}.
+
+start_and_store_proxy(ConnInfo, Props, Keyfile) ->
     #{
         clientid := ClientId,
         clean_start := CleanStart,
@@ -99,10 +112,8 @@ on_client_connect(ConnInfo = #{socktype := ssl}, Props, Env) ->
         keepalive := KeepAlive,
         proto_ver := ProtoVer0
     } = ConnInfo,
-    PrivateKeysDir = persistent_term:get({?MODULE, private_keys_dir}),
     Host = persistent_term:get({?MODULE, remote_host}),
     Port = persistent_term:get({?MODULE, remote_port}),
-    Keyfile = filename:join([to_bin(PrivateKeysDir), [ClientId, <<".pem">>]]),
     ConnPid = self(),
     ProtoVer =
         case ProtoVer0 of
@@ -156,9 +167,7 @@ on_client_connect(ConnInfo = #{socktype := ssl}, Props, Env) ->
                 error => Error
             }),
             {stop, {error, ?RC_UNSPECIFIED_ERROR}}
-    end;
-on_client_connect(_ConnInfo, Props, _Env) ->
-    {ok, Props}.
+    end.
 
 %% unused
 on_client_connack(ConnInfo = #{clientid := ClientId}, Rc, Props, _Env) ->
