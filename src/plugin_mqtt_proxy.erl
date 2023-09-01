@@ -77,12 +77,6 @@ load(Env) ->
 %% Client Lifecycle Hooks
 %%--------------------------------------------------------------------
 
-on_client_connect(_ConnInfo = #{peercert := undefined, socktype := ssl}, _Props, _Env) ->
-    ?SLOG(warning, #{
-        msg => "no_peercert",
-        hint => "set verify = verify_peer in EMQX TLS listener"
-    }),
-    {stop, {error, ?RC_BAD_USER_NAME_OR_PASSWORD}};
 on_client_connect(ConnInfo = #{socktype := ssl}, Props, Env) ->
     ?SLOG(debug, #{
         msg => "proxy_plugin_on_connect",
@@ -93,21 +87,21 @@ on_client_connect(ConnInfo = #{socktype := ssl}, Props, Env) ->
     }),
     #{clientid := ClientId} = ConnInfo,
     PrivateKeysDir = persistent_term:get({?MODULE, private_keys_dir}),
-    Keyfile = filename:join([to_bin(PrivateKeysDir), [ClientId, <<".pem">>]]),
-    case filelib:is_regular(Keyfile) of
+    Keyfile = filename:join([to_bin(PrivateKeysDir), [ClientId, <<".key">>]]),
+    Certfile = filename:join([to_bin(PrivateKeysDir), [ClientId, <<".pem">>]]),
+    case filelib:is_regular(Keyfile) andalso filelib:is_regular(Certfile) of
         true ->
-            start_and_store_proxy(ConnInfo, Props, Keyfile);
+            start_and_store_proxy(ConnInfo, Props, Keyfile, Certfile);
         false ->
             {ok, Props}
     end;
 on_client_connect(_ConnInfo, Props, _Env) ->
     {ok, Props}.
 
-start_and_store_proxy(ConnInfo, Props, Keyfile) ->
+start_and_store_proxy(ConnInfo, Props, Keyfile, Certfile) ->
     #{
         clientid := ClientId,
         clean_start := CleanStart,
-        peercert := DERCertificate,
         %% , expiry_interval := ExpiryInterval
         keepalive := KeepAlive,
         proto_ver := ProtoVer0
@@ -131,7 +125,7 @@ start_and_store_proxy(ConnInfo, Props, Keyfile) ->
         {keepalive, KeepAlive},
         {ssl, true},
         {ssl_opts, [
-            {cert, [DERCertificate]},
+            {certfile, Certfile},
             {keyfile, Keyfile}
         ]},
         {reconnect, 0},
